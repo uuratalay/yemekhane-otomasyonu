@@ -19,6 +19,7 @@ from ..veri.katalog_deposu import KatalogDeposu
 from ..veri.yonetim_deposu import YonetimDeposu
 
 from ..onbellek.oturum_deposu import OturumDeposu
+from ..onbellek.menu_onbellegi import MenuOnbellegi
 
 from ..servis.kimlik_servisi import KimlikServisi
 from ..servis.menu_servisi import MenuServisi
@@ -38,14 +39,15 @@ yonetim_depo       = YonetimDeposu(baglanti)
 
 # ---- Önbellek / oturum ---------------------------------------------------
 oturum_deposu = OturumDeposu(redis_istemci)
+menu_onbellegi = MenuOnbellegi(redis_istemci)
 
 # ---- Servisler (iş katmanı) ---------------------------------------------
 kimlik_servisi        = KimlikServisi(kullanici_depo, oturum_deposu)
-menu_servisi          = MenuServisi(menu_depo)
+menu_servisi          = MenuServisi(menu_depo, menu_onbellegi)
 rezervasyon_servisi   = RezervasyonServisi(rezervasyon_depo)
 bakiye_servisi        = BakiyeServisi(bakiye_depo)
 degerlendirme_servisi = DegerlendirmeServisi(degerlendirme_depo)
-yonetim_servisi       = YonetimServisi(yonetim_depo)
+yonetim_servisi       = YonetimServisi(yonetim_depo, menu_onbellegi)
 
 
 # ---- Kimlik denetimi (request-scoped) -----------------------------------

@@ -1,10 +1,14 @@
-"""YonetimServisi — yönetici menü oluşturma/güncelleme ve menü özeti."""
+"""
+YonetimServisi — yönetici menü oluşturma/güncelleme ve özet.
+Menü değişince ilgili önbellek anahtarı geçersizleştirilir (Aşama 3).
+"""
 from ..core.hatalar import UygulamaHatasi
 
 
 class YonetimServisi:
-    def __init__(self, yonetim_depo):
+    def __init__(self, yonetim_depo, menu_onbellegi):
         self._y = yonetim_depo
+        self._cache = menu_onbellegi
 
     def menu_olustur(self, istek):
         if not istek.yemek_idler:
@@ -13,6 +17,8 @@ class YonetimServisi:
             istek.yemekhane_id, istek.tarih, istek.ogun_id,
             istek.ogrenci_fiyati, istek.personel_fiyati, istek.yemek_idler,
         )
+        # Yeni menü: olası eski/boş önbellek kaydını temizle
+        self._cache.sil(istek.yemekhane_id, str(istek.tarih), istek.ogun_id)
         return {"menu_id": menu_id, "mesaj": "Menü oluşturuldu."}
 
     def menu_guncelle(self, menu_id: int, istek):
@@ -21,6 +27,11 @@ class YonetimServisi:
         self._y.menu_guncelle(
             menu_id, istek.ogrenci_fiyati, istek.personel_fiyati, istek.yemek_idler,
         )
+        # Önbelleği geçersizleştir: bir sonraki görüntüleme replikadan taze gelir
+        b = self._y.baslik(menu_id)
+        if b:
+            print(f"[ONBELLEK] SIL menu:{b['yemekhane_id']}:{b['tarih']}:{b['ogun_id']}", flush=True)
+            self._cache.sil(b["yemekhane_id"], str(b["tarih"]), b["ogun_id"])
         return {"menu_id": menu_id, "mesaj": "Menü güncellendi."}
 
     def menu_listesi(self):

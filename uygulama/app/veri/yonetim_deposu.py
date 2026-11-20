@@ -90,3 +90,10 @@ class YonetimDeposu(TemelDepo):
         satirlar = self.oku_liste(
             "SELECT yemek_id FROM menu_yemekleri WHERE menu_id = %s", (menu_id,))
         return [s["yemek_id"] for s in satirlar]
+
+    def baslik(self, menu_id: int):
+        """Önbellek anahtarı için menünün yemekhane/tarih/öğün bilgisi."""
+        return self.oku_tek(
+            "SELECT yemekhane_id, tarih, ogun_id FROM menuler WHERE id = %s",
+            (menu_id,),
+        )
