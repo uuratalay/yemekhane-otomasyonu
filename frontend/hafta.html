@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Haftalık Menü & Rezervasyon</title>
+  <link rel="stylesheet" href="/css/temel.css">
+</head>
+<body>
+  <header id="ustmenu" class="ustmenu"></header>
+  <main class="kapsayici">
+    <h1>Haftalık Menü & Rezervasyon</h1>
+    <p id="mesaj" class="bildirim" role="status" style="display:none"></p>
+
+    <div class="kart">
+      <div class="satir">
+        <div>
+          <label for="yemekhane">Yemekhane</label>
+          <select id="yemekhane"></select>
+        </div>
+      </div>
+    </div>
+
+    <div id="liste" class="menu-liste"></div>
+  </main>
+
+  <script src="/js/ortak.js"></script>
+  <script>
+    if (!koru()) throw new Error("yetkisiz");
+    menuCiz("hafta.html");
+
+    const yemekhaneSec = document.getElementById("yemekhane");
+    const liste = document.getElementById("liste");
+
+    async function basla() {
+      const katalog = await istek("/katalog");
+      yemekhaneSec.innerHTML = katalog.yemekhaneler
+        .map(y => `<option value="${y.id}">${y.ad} (${y.kapasite} kişi)</option>`).join("");
+      yemekhaneSec.addEventListener("change", yukle);
+      await yukle();
+    }
+
+    async function yukle() {
+      liste.innerHTML = "<p>Yükleniyor…</p>";
+      const menuler = await istek("/menu/haftalik?yemekhane_id=" + yemekhaneSec.value);
+      if (!menuler.length) { liste.innerHTML = "<p>Bu yemekhane için önümüzdeki hafta menü yok.</p>"; return; }
+
+      let html = "", oncekiTarih = null;
+      for (const m of menuler) {
+        if (m.tarih !== oncekiTarih) {
+          html += `<div class="gun-baslik">${gunMetni(m.tarih)}</div>`;
+          oncekiTarih = m.tarih;
+        }
+        const dolu = m.bos_yer <= 0;
+        const rozet = m.gecti
+          ? '<span class="rozet dolu">Süre doldu</span>'
+          : (dolu ? '<span class="rozet dolu">Dolu</span>'
+                  : `<span class="rozet${m.bos_yer <= 10 ? " az" : ""}">${m.bos_yer} boş yer</span>`);
+        const pasif = m.gecti || dolu;
+        html += `
+          <div class="menu-satir">
+            <div class="bilgi">
+              <strong>${m.ogun}</strong>
+              <span class="fiyat">${paraYaz(m.fiyat)}</span>
+            </div>
+            <div class="sag">
+              ${rozet}
+              <button class="dugme" ${pasif ? "disabled" : ""}
+                onclick="rezerve(${m.menu_id})">Rezerve et</button>
+            </div>
+          </div>`;
+      }
+      liste.innerHTML = html;
+    }
+
+    async function rezerve(menuId) {
+      try {
+        const s = await istek("/rezervasyon", { method: "POST", govde: { menu_id: menuId } });
+        bildirim("mesaj", `${s.mesaj} Ücret ${paraYaz(s.ucret)} düşüldü, güncel bakiye ${paraYaz(s.bakiye)}.`, "basari");
+        await yukle();
+      } catch (err) {
+        bildirim("mesaj", err.message);   // "Bakiye yetersiz." vb. yordam mesajı
+      }
+    }
+
+    function gunMetni(t) {
+      const g = new Date(t + "T00:00:00");
+      return g.toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long" });
+    }
+
+    basla().catch(e => bildirim("mesaj", e.message));
+  </script>
+</body>
+</html>

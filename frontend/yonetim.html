@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Yönetim Paneli</title>
+  <link rel="stylesheet" href="/css/temel.css">
+</head>
+<body>
+  <header id="ustmenu" class="ustmenu"></header>
+  <main class="kapsayici">
+    <h1>Yönetim Paneli</h1>
+    <p id="mesaj" class="bildirim" role="status" style="display:none"></p>
+
+    <div class="kart">
+      <h2 id="form-baslik">Yeni menü oluştur</h2>
+      <div class="satir">
+        <div>
+          <label for="yemekhane">Yemekhane</label>
+          <select id="yemekhane"></select>
+        </div>
+        <div>
+          <label for="tarih">Tarih</label>
+          <input type="date" id="tarih">
+        </div>
+        <div>
+          <label for="ogun">Öğün</label>
+          <select id="ogun"></select>
+        </div>
+      </div>
+      <div class="satir">
+        <div>
+          <label for="ogr">Öğrenci fiyatı (₺)</label>
+          <input type="number" id="ogr" min="0" step="0.5" value="40">
+        </div>
+        <div>
+          <label for="per">Personel fiyatı (₺)</label>
+          <input type="number" id="per" min="0" step="0.5" value="60">
+        </div>
+      </div>
+      <div class="form-alan">
+        <label>Yemekler</label>
+        <div id="yemekler" class="yemek-sec"></div>
+      </div>
+      <button class="dugme" id="kaydet" onclick="kaydet()">Oluştur</button>
+      <button class="dugme cikis" id="iptal-duzenle" style="display:none" onclick="formSifirla()">Vazgeç</button>
+    </div>
+
+    <div class="kart">
+      <h2>Önümüzdeki menüler</h2>
+      <div id="menu-listesi" class="tablo-kaydir"></div>
+    </div>
+  </main>
+
+  <script src="/js/ortak.js"></script>
+  <script>
+    if (!koru()) throw new Error("yetkisiz");
+    menuCiz("yonetim.html");
+    const k = Depo.kullanici();
+    if (k.rol !== "yonetici") { document.querySelector("main").innerHTML = '<p class="bildirim bildirim-hata">Bu sayfa yalnızca yöneticiler içindir.</p>'; }
+
+    let duzenlenenId = null;
+
+    async function basla() {
+      const katalog = await istek("/katalog");
+      document.getElementById("yemekhane").innerHTML =
+        katalog.yemekhaneler.map(y => `<option value="${y.id}">${y.ad}</option>`).join("");
+      document.getElementById("ogun").innerHTML =
+        katalog.ogunler.map(o => `<option value="${o.id}">${o.ad}</option>`).join("");
+      document.getElementById("tarih").value = katalog.bugun;
+      document.getElementById("yemekler").innerHTML =
+        katalog.yemekler.map(y =>
+          `<label><input type="checkbox" class="yemek" value="${y.id}"> ${y.ad} <span class="ipucu">(${y.kategori})</span></label>`).join("");
+      await listeyiYukle();
+    }
+
+    async function listeyiYukle() {
+      const menuler = await istek("/yonetim/menuler");
+      const satirlar = menuler.map(m => `
+        <tr>
+          <td>${m.tarih}</td>
+          <td>${m.ogun}</td>
+          <td>${m.yemekhane}</td>
+          <td>${m.rezerve}/${m.kapasite} (%${m.doluluk_yuzde})</td>
+          <td>${m.ortalama_puan != null ? m.ortalama_puan + " (" + m.oy_sayisi + " oy)" : "—"}</td>
+          <td><button class="dugme" onclick="duzenle(${m.menu_id})">Düzenle</button></td>
+        </tr>`).join("");
+      document.getElementById("menu-listesi").innerHTML = menuler.length
+        ? `<table class="veri"><thead><tr><th>Tarih</th><th>Öğün</th><th>Yemekhane</th><th>Doluluk</th><th>Puan</th><th></th></tr></thead><tbody>${satirlar}</tbody></table>`
+        : "<p>Önümüzdeki 7 gün için menü yok.</p>";
+    }
+
+    function secilenYemekler() {
+      return [...document.querySelectorAll(".yemek:checked")].map(c => Number(c.value));
+    }
+
+    async function kaydet() {
+      try {
+        const govde = {
+          ogrenci_fiyati: Number(document.getElementById("ogr").value),
+          personel_fiyati: Number(document.getElementById("per").value),
+          yemek_idler: secilenYemekler(),
+        };
+        let s;
+        if (duzenlenenId) {
+          s = await istek(`/yonetim/menu/${duzenlenenId}`, { method: "PUT", govde });
+        } else {
+          govde.yemekhane_id = Number(document.getElementById("yemekhane").value);
+          govde.tarih = document.getElementById("tarih").value;
+          govde.ogun_id = Number(document.getElementById("ogun").value);
+          s = await istek("/yonetim/menu", { method: "POST", govde });
+        }
+        bildirim("mesaj", s.mesaj, "basari");
+        formSifirla();
+        await listeyiYukle();
+      } catch (err) {
+        bildirim("mesaj", err.message);
+      }
+    }
+
+    async function duzenle(menuId) {
+      const o = await istek(`/yonetim/menu/${menuId}/ozet`);
+      duzenlenenId = menuId;
+      document.getElementById("form-baslik").textContent = `Menü düzenle · ${o.yemekhane} · ${o.ogun} · ${o.tarih}`;
+      document.getElementById("ogr").value = o.ogrenci_fiyati;
+      document.getElementById("per").value = o.personel_fiyati;
+      ["yemekhane", "tarih", "ogun"].forEach(id => document.getElementById(id).disabled = true);
+      document.querySelectorAll(".yemek").forEach(c => c.checked = o.yemek_idler.includes(Number(c.value)));
+      document.getElementById("kaydet").textContent = "Güncelle";
+      document.getElementById("iptal-duzenle").style.display = "inline-block";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      bildirim("mesaj", "Menü düzenleniyor — değişiklikleri yapıp Güncelle'ye basın.", "basari");
+    }
+
+    function formSifirla() {
+      duzenlenenId = null;
+      document.getElementById("form-baslik").textContent = "Yeni menü oluştur";
+      ["yemekhane", "tarih", "ogun"].forEach(id => document.getElementById(id).disabled = false);
+      document.getElementById("ogr").value = "40";
+      document.getElementById("per").value = "60";
+      document.querySelectorAll(".yemek").forEach(c => c.checked = false);
+      document.getElementById("kaydet").textContent = "Oluştur";
+      document.getElementById("iptal-duzenle").style.display = "none";
+    }
+
+    basla().catch(e => bildirim("mesaj", e.message));
+  </script>
+</body>
+</html>

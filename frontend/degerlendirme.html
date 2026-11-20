@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Değerlendirme</title>
+  <link rel="stylesheet" href="/css/temel.css">
+</head>
+<body>
+  <header id="ustmenu" class="ustmenu"></header>
+  <main class="kapsayici">
+    <h1>Değerlendirme</h1>
+    <p class="ipucu">Yalnızca turnikeden geçip <strong>kullandığınız</strong> menüleri 1–5 arası puanlayabilirsiniz.</p>
+    <p id="mesaj" class="bildirim" role="status" style="display:none"></p>
+    <div id="liste"></div>
+  </main>
+
+  <script src="/js/ortak.js"></script>
+  <script>
+    if (!koru()) throw new Error("yetkisiz");
+    menuCiz("degerlendirme.html");
+
+    const liste = document.getElementById("liste");
+
+    async function yukle() {
+      liste.innerHTML = "<p>Yükleniyor…</p>";
+      const bekleyenler = await istek("/degerlendirme/bekleyenler");
+      if (!bekleyenler.length) { liste.innerHTML = '<div class="kart"><p>Değerlendirilecek kullanılmış menünüz yok.</p></div>'; return; }
+
+      liste.innerHTML = bekleyenler.map(m => `
+        <div class="kart">
+          <h3 style="margin-bottom:.25rem">${m.yemekhane} · ${m.ogun} · ${m.tarih}</h3>
+          <div class="form-alan">
+            <label>Puan</label>
+            <select id="puan-${m.menu_id}">
+              <option value="5">5 · çok iyi</option>
+              <option value="4">4 · iyi</option>
+              <option value="3">3 · orta</option>
+              <option value="2">2 · kötü</option>
+              <option value="1">1 · çok kötü</option>
+            </select>
+          </div>
+          <div class="form-alan">
+            <label>Yorum (isteğe bağlı)</label>
+            <textarea id="yorum-${m.menu_id}" rows="2" maxlength="500"></textarea>
+          </div>
+          <button class="dugme" onclick="gonder(${m.menu_id})">Gönder</button>
+        </div>`).join("");
+    }
+
+    async function gonder(menuId) {
+      try {
+        const s = await istek("/degerlendirme", {
+          method: "POST",
+          govde: {
+            menu_id: menuId,
+            puan: Number(document.getElementById("puan-" + menuId).value),
+            yorum: document.getElementById("yorum-" + menuId).value,
+          },
+        });
+        bildirim("mesaj", s.mesaj, "basari");
+        await yukle();
+      } catch (err) {
+        bildirim("mesaj", err.message);
+      }
+    }
+
+    yukle().catch(e => bildirim("mesaj", e.message));
+  </script>
+</body>
+</html>

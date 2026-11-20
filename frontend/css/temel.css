@@ -120,3 +120,56 @@ input, select, textarea {
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* ===================================================================
+   Aşama 2 bileşenleri — üst menü, kartlar, menü listeleri, tablolar
+   Mobil önce: 400 px'te tek sütun, geniş ekranda akışkan.
+   =================================================================== */
+.ustmenu { display:flex; flex-wrap:wrap; align-items:center; gap:.5rem .9rem;
+  background:var(--ana); color:#fff; padding:.6rem 1rem; }
+.ustmenu .marka { font-weight:700; }
+.ustmenu .baglantilar { display:flex; flex-wrap:wrap; gap:.15rem .9rem; flex:1 1 auto; }
+.ustmenu .baglantilar a { color:#dff1ec; text-decoration:none; font-size:var(--boyut-kucuk); padding:.2rem 0; }
+.ustmenu .baglantilar a.etkin { color:#fff; font-weight:700; border-bottom:2px solid var(--vurgu); }
+.ustmenu .kullanici { display:flex; align-items:center; gap:.5rem; font-size:var(--boyut-kucuk); }
+.ustmenu .dugme.cikis { background:var(--ana-koyu); min-height:36px; padding:.3rem .8rem; }
+
+.kart { background:var(--yuzey); border:1px solid var(--cizgi); border-radius:var(--kose);
+  padding:1rem; margin-block:1rem; }
+.kart h2, .kart h3 { margin-top:0; }
+
+.satir { display:flex; flex-wrap:wrap; gap:.75rem; align-items:flex-end; }
+.satir > * { flex:1 1 150px; }
+
+.menu-liste { display:grid; gap:.6rem; }
+.menu-satir { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center;
+  gap:.5rem; border:1px solid var(--cizgi); border-radius:var(--kose); padding:.7rem; background:var(--yuzey); }
+.menu-satir .bilgi { display:flex; flex-direction:column; gap:.15rem; }
+.menu-satir .sag { display:flex; align-items:center; gap:.6rem; }
+
+.rozet { display:inline-block; font-size:var(--boyut-kucuk); font-weight:600;
+  padding:.1rem .55rem; border-radius:999px; background:var(--basari-zemin); color:var(--basari); }
+.rozet.az  { background:var(--hata-zemin); color:var(--hata); }
+.rozet.dolu{ background:var(--cizgi); color:var(--metin-soluk); }
+.fiyat { color:var(--ana-koyu); font-weight:700; }
+.gun-baslik { margin:.75rem 0 .1rem; font-weight:700; color:var(--metin-soluk);
+  font-size:var(--boyut-kucuk); text-transform:uppercase; letter-spacing:.03em; }
+
+table.veri { width:100%; border-collapse:collapse; font-size:var(--boyut-kucuk); }
+table.veri th, table.veri td { text-align:left; padding:.5rem .4rem; border-bottom:1px solid var(--cizgi); vertical-align:top; }
+.durum { font-weight:600; }
+.durum.aktif { color:var(--ana); }
+.durum.kullanildi { color:var(--metin-soluk); }
+.durum.iptal { color:var(--hata); }
+
+.yemek-sec { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+  gap:.25rem .75rem; max-height:240px; overflow:auto; border:1px solid var(--cizgi);
+  border-radius:var(--kose); padding:.5rem; }
+.yemek-sec label { font-weight:400; display:flex; gap:.4rem; align-items:center; margin:0; }
+.yemek-sec input { width:auto; }
+
+.giris-kapsayici { max-width:420px; padding-top:3rem; }
+.ipucu { font-size:var(--boyut-kucuk); color:var(--metin-soluk); }
+.form-alan { margin-bottom:.75rem; }
+.yildiz { font-size:1.5rem; color:var(--vurgu); letter-spacing:.12rem; cursor:pointer; }
+.etiketler { display:flex; flex-wrap:wrap; gap:.3rem; margin-top:.3rem; }

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Günün Menüsü</title>
+  <link rel="stylesheet" href="/css/temel.css">
+</head>
+<body>
+  <header id="ustmenu" class="ustmenu"></header>
+  <main class="kapsayici">
+    <h1>Günün Menüsü</h1>
+    <p id="mesaj" class="bildirim" role="status" style="display:none"></p>
+
+    <div class="kart">
+      <div class="satir">
+        <div>
+          <label for="yemekhane">Yemekhane</label>
+          <select id="yemekhane"></select>
+        </div>
+        <div>
+          <label for="tarih">Tarih</label>
+          <input type="date" id="tarih">
+        </div>
+        <div>
+          <label for="ogun">Öğün</label>
+          <select id="ogun"></select>
+        </div>
+        <div style="flex:0 0 auto">
+          <button class="dugme" onclick="goster()">Göster</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="sonuc"></div>
+  </main>
+
+  <script src="/js/ortak.js"></script>
+  <script>
+    if (!koru()) throw new Error("yetkisiz");
+    menuCiz("menu.html");
+
+    const yemekhaneSec = document.getElementById("yemekhane");
+    const ogunSec = document.getElementById("ogun");
+    const tarihGir = document.getElementById("tarih");
+    const sonuc = document.getElementById("sonuc");
+
+    async function basla() {
+      const katalog = await istek("/katalog");
+      yemekhaneSec.innerHTML = katalog.yemekhaneler.map(y => `<option value="${y.id}">${y.ad}</option>`).join("");
+      ogunSec.innerHTML = katalog.ogunler.map(o => `<option value="${o.id}">${o.ad}</option>`).join("");
+      tarihGir.value = katalog.bugun;
+      await goster();
+    }
+
+    async function goster() {
+      sonuc.innerHTML = "<p>Yükleniyor…</p>";
+      const m = await istek(`/menu/gunluk?yemekhane_id=${yemekhaneSec.value}&tarih=${tarihGir.value}&ogun_id=${ogunSec.value}`);
+      if (!m) { sonuc.innerHTML = '<div class="kart"><p>Bu seçim için menü bulunamadı.</p></div>'; return; }
+
+      const satirlar = m.yemekler.map(y => `
+        <tr>
+          <td>${y.kategori}</td>
+          <td>${y.ad} ${y.vejetaryen ? '<span class="rozet">vejetaryen</span>' : ""}</td>
+          <td>${y.kalori} kcal</td>
+          <td>${y.alerjenler || "—"}</td>
+        </tr>`).join("");
+
+      sonuc.innerHTML = `
+        <div class="kart">
+          <h2>${m.yemekhane} · ${m.ogun}</h2>
+          <p>
+            <span class="rozet">Toplam ${m.toplam_kalori} kcal</span>
+            ${m.hepsi_vejetaryen ? '<span class="rozet">tamamı vejetaryen</span>' : ""}
+            <span class="rozet dolu">Öğrenci ${paraYaz(m.ogrenci_fiyati)}</span>
+            <span class="rozet dolu">Personel ${paraYaz(m.personel_fiyati)}</span>
+          </p>
+          <div class="tablo-kaydir">
+            <table class="veri">
+              <thead><tr><th>Kategori</th><th>Yemek</th><th>Kalori</th><th>Alerjenler</th></tr></thead>
+              <tbody>${satirlar}</tbody>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    basla().catch(e => bildirim("mesaj", e.message));
+  </script>
+</body>
+</html>

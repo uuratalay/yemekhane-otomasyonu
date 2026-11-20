@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bakiye</title>
+  <link rel="stylesheet" href="/css/temel.css">
+</head>
+<body>
+  <header id="ustmenu" class="ustmenu"></header>
+  <main class="kapsayici">
+    <h1>Bakiye</h1>
+    <p id="mesaj" class="bildirim" role="status" style="display:none"></p>
+
+    <div class="kart">
+      <h2 style="margin:0">Güncel bakiye: <span id="bakiye" class="fiyat">—</span></h2>
+      <p class="ipucu">Bu değer okuma kopyasından (replika) gelir; yüklemeden hemen sonra görünen tutar ise kaynaktan döner.</p>
+      <div class="satir" style="margin-top:.5rem">
+        <div>
+          <label for="tutar">Yüklenecek tutar (10–1000 ₺)</label>
+          <input type="number" id="tutar" min="10" max="1000" step="10" value="50">
+        </div>
+        <div style="flex:0 0 auto">
+          <button class="dugme" onclick="yukle()">Yükle</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="kart">
+      <h3>Hareket geçmişi</h3>
+      <div id="hareketler" class="tablo-kaydir"></div>
+    </div>
+  </main>
+
+  <script src="/js/ortak.js"></script>
+  <script>
+    if (!koru()) throw new Error("yetkisiz");
+    menuCiz("bakiye.html");
+
+    async function cek() {
+      const o = await istek("/bakiye");
+      document.getElementById("bakiye").textContent = paraYaz(o.bakiye);
+      const satirlar = o.hareketler.map(h => `
+        <tr>
+          <td>${h.olusturma}</td>
+          <td>${h.tur}</td>
+          <td style="color:${h.tutar < 0 ? "var(--hata)" : "var(--basari)"}">${paraYaz(h.tutar)}</td>
+          <td>${h.aciklama || ""}</td>
+        </tr>`).join("");
+      document.getElementById("hareketler").innerHTML = o.hareketler.length
+        ? `<table class="veri"><thead><tr><th>Zaman</th><th>Tür</th><th>Tutar</th><th>Açıklama</th></tr></thead><tbody>${satirlar}</tbody></table>`
+        : "<p>Henüz hareket yok.</p>";
+    }
+
+    async function yukle() {
+      try {
+        const s = await istek("/bakiye/yukle", {
+          method: "POST",
+          govde: { tutar: Number(document.getElementById("tutar").value) },
+        });
+        bildirim("mesaj", `${s.mesaj} Güncel bakiye ${paraYaz(s.bakiye)}.`, "basari");
+        await cek();
+      } catch (err) {
+        bildirim("mesaj", err.message);
+      }
+    }
+
+    cek().catch(e => bildirim("mesaj", e.message));
+  </script>
+</body>
+</html>

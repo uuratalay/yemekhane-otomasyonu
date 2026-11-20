@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rezervasyonlarım</title>
+  <link rel="stylesheet" href="/css/temel.css">
+</head>
+<body>
+  <header id="ustmenu" class="ustmenu"></header>
+  <main class="kapsayici">
+    <h1>Rezervasyonlarım</h1>
+    <p id="mesaj" class="bildirim" role="status" style="display:none"></p>
+    <div id="sonuc" class="kart"></div>
+  </main>
+
+  <script src="/js/ortak.js"></script>
+  <script>
+    if (!koru()) throw new Error("yetkisiz");
+    menuCiz("rezervasyonlarim.html");
+
+    const sonuc = document.getElementById("sonuc");
+
+    async function yukle() {
+      sonuc.innerHTML = "<p>Yükleniyor…</p>";
+      const liste = await istek("/rezervasyonlarim");
+      if (!liste.length) { sonuc.innerHTML = "<p>Henüz rezervasyonunuz yok.</p>"; return; }
+
+      const satirlar = liste.map(r => `
+        <tr>
+          <td>${r.tarih}</td>
+          <td>${r.ogun}</td>
+          <td>${r.yemekhane}</td>
+          <td><span class="durum ${r.durum}">${r.durum}</span></td>
+          <td>${paraYaz(r.ucret)}</td>
+          <td>${r.iptal_edilebilir
+                ? `<button class="dugme cikis" onclick="iptal(${r.rezervasyon_id})">İptal</button>`
+                : "—"}</td>
+        </tr>`).join("");
+
+      sonuc.innerHTML = `
+        <div class="tablo-kaydir">
+          <table class="veri">
+            <thead><tr><th>Tarih</th><th>Öğün</th><th>Yemekhane</th><th>Durum</th><th>Ücret</th><th></th></tr></thead>
+            <tbody>${satirlar}</tbody>
+          </table>
+        </div>`;
+    }
+
+    async function iptal(rezId) {
+      try {
+        const s = await istek(`/rezervasyon/${rezId}/iptal`, { method: "POST" });
+        bildirim("mesaj", `${s.mesaj} ${paraYaz(s.iade)} iade edildi, güncel bakiye ${paraYaz(s.bakiye)}.`, "basari");
+        await yukle();
+      } catch (err) {
+        bildirim("mesaj", err.message);
+      }
+    }
+
+    yukle().catch(e => bildirim("mesaj", e.message));
+  </script>
+</body>
+</html>
