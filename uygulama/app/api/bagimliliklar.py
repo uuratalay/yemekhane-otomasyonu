@@ -27,6 +27,7 @@ from ..servis.rezervasyon_servisi import RezervasyonServisi
 from ..servis.bakiye_servisi import BakiyeServisi
 from ..servis.degerlendirme_servisi import DegerlendirmeServisi
 from ..servis.yonetim_servisi import YonetimServisi
+from ..servis.profil_servisi import ProfilServisi
 
 # ---- Depolar (veri katmanı) ---------------------------------------------
 kullanici_depo     = KullaniciDeposu(baglanti)
@@ -43,11 +44,12 @@ menu_onbellegi = MenuOnbellegi(redis_istemci)
 
 # ---- Servisler (iş katmanı) ---------------------------------------------
 kimlik_servisi        = KimlikServisi(kullanici_depo, oturum_deposu)
-menu_servisi          = MenuServisi(menu_depo, menu_onbellegi)
+menu_servisi          = MenuServisi(menu_depo, menu_onbellegi, kullanici_depo, katalog_depo)
 rezervasyon_servisi   = RezervasyonServisi(rezervasyon_depo)
 bakiye_servisi        = BakiyeServisi(bakiye_depo)
 degerlendirme_servisi = DegerlendirmeServisi(degerlendirme_depo)
 yonetim_servisi       = YonetimServisi(yonetim_depo, menu_onbellegi)
+profil_servisi        = ProfilServisi(kullanici_depo, katalog_depo)
 
 
 # ---- Kimlik denetimi (request-scoped) -----------------------------------

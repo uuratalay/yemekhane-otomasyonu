@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Profil · Alerjen Tercihleri</title>
+  <link rel="stylesheet" href="/css/temel.css">
+</head>
+<body>
+  <header id="ustmenu" class="ustmenu"></header>
+  <main class="kapsayici">
+    <h1>Profil · Alerjen Tercihleri</h1>
+    <p class="ipucu">Seçtiğiniz alerjenleri içeren yemekler, <strong>Günün Menüsü</strong>'nde ⚠ ile işaretlenir.</p>
+    <p id="mesaj" class="bildirim" role="status" style="display:none"></p>
+
+    <div class="kart">
+      <label>Alerjenlerim</label>
+      <div id="alerjenler" class="yemek-sec"></div>
+      <button class="dugme" onclick="kaydet()" style="margin-top:.75rem">Kaydet</button>
+    </div>
+  </main>
+
+  <script src="/js/ortak.js"></script>
+  <script>
+    if (!koru()) throw new Error("yetkisiz");
+    menuCiz("profil.html");
+
+    async function yukle() {
+      const o = await istek("/profil/alerjenler");
+      const secili = new Set(o.secili);
+      document.getElementById("alerjenler").innerHTML = o.tum.map(a =>
+        `<label><input type="checkbox" class="alj" value="${a.id}" ${secili.has(a.id) ? "checked" : ""}> ${a.ad}</label>`
+      ).join("");
+    }
+
+    async function kaydet() {
+      const idler = [...document.querySelectorAll(".alj:checked")].map(c => Number(c.value));
+      try {
+        const s = await istek("/profil/alerjenler", { method: "PUT", govde: { alerjen_idler: idler } });
+        bildirim("mesaj", s.mesaj, "basari");
+      } catch (err) {
+        bildirim("mesaj", err.message);
+      }
+    }
+
+    yukle().catch(e => bildirim("mesaj", e.message));
+  </script>
+</body>
+</html>

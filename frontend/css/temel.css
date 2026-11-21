@@ -173,3 +173,7 @@ table.veri th, table.veri td { text-align:left; padding:.5rem .4rem; border-bott
 .form-alan { margin-bottom:.75rem; }
 .yildiz { font-size:1.5rem; color:var(--vurgu); letter-spacing:.12rem; cursor:pointer; }
 .etiketler { display:flex; flex-wrap:wrap; gap:.3rem; margin-top:.3rem; }
+
+/* Aşama 4 — porsiyon seçimi ve alerjen uyarısı */
+.porsiyon-sec { min-height:36px; width:auto; padding:.2rem .4rem; font-size:var(--boyut-kucuk); }
+.uyari-satir { background:var(--hata-zemin); }

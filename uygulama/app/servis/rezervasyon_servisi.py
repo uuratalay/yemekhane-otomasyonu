@@ -1,7 +1,6 @@
 """
 RezervasyonServisi — rezervasyon yap/iptal/listele.
-Para mantığı yordamdadır; servis sonucu biçimler. yap/iptal sonrası dönen
-'bakiye' KAYNAK'tan gelir (anlık, doğru değer).
+yap: porsiyon (tam/yarim) iletir. yap/iptal sonrası 'bakiye' KAYNAK'tan gelir.
 """
 
 
@@ -9,8 +8,8 @@ class RezervasyonServisi:
     def __init__(self, rezervasyon_depo):
         self._rez = rezervasyon_depo
 
-    def yap(self, kullanici_id: int, menu_id: int):
-        s = self._rez.yap(kullanici_id, menu_id)
+    def yap(self, kullanici_id: int, menu_id: int, porsiyon: str = "tam"):
+        s = self._rez.yap(kullanici_id, menu_id, porsiyon)
         return {
             "rezervasyon_id": s["rezervasyon_id"],
             "ucret": float(s["ucret"]),

@@ -31,6 +31,7 @@
           <td>${r.tarih}</td>
           <td>${r.ogun}</td>
           <td>${r.yemekhane}</td>
+          <td>${r.porsiyon === "yarim" ? "Yarım" : "Tam"}</td>
           <td><span class="durum ${r.durum}">${r.durum}</span></td>
           <td>${paraYaz(r.ucret)}</td>
           <td>${r.iptal_edilebilir
@@ -41,7 +42,7 @@
       sonuc.innerHTML = `
         <div class="tablo-kaydir">
           <table class="veri">
-            <thead><tr><th>Tarih</th><th>Öğün</th><th>Yemekhane</th><th>Durum</th><th>Ücret</th><th></th></tr></thead>
+            <thead><tr><th>Tarih</th><th>Öğün</th><th>Yemekhane</th><th>Porsiyon</th><th>Durum</th><th>Ücret</th><th></th></tr></thead>
             <tbody>${satirlar}</tbody>
           </table>
         </div>`;

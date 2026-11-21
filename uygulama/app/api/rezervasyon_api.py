@@ -1,4 +1,4 @@
-"""Rezervasyon uçları: yap, iptal, rezervasyonlarım."""
+"""Rezervasyon uçları: yap (porsiyonlu), iptal, rezervasyonlarım."""
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
@@ -9,11 +9,12 @@ router = APIRouter(prefix="/api")
 
 class RezervasyonIstegi(BaseModel):
     menu_id: int
+    porsiyon: str = "tam"     # 'tam' | 'yarim' (Aşama 4)
 
 
 @router.post("/rezervasyon")
 def yap(istek: RezervasyonIstegi, kullanici: dict = Depends(mevcut_kullanici)):
-    return rezervasyon_servisi.yap(kullanici["id"], istek.menu_id)
+    return rezervasyon_servisi.yap(kullanici["id"], istek.menu_id, istek.porsiyon)
 
 
 @router.post("/rezervasyon/{rezervasyon_id}/iptal")

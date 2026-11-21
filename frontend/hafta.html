@@ -57,6 +57,13 @@
           : (dolu ? '<span class="rozet dolu">Dolu</span>'
                   : `<span class="rozet${m.bos_yer <= 10 ? " az" : ""}">${m.bos_yer} boş yer</span>`);
         const pasif = m.gecti || dolu;
+        // Yarım porsiyon yalnızca öğle/akşam (kahvaltıda yok)
+        const porsiyonSec = (m.ogun !== "Kahvaltı")
+          ? `<select id="porsiyon-${m.menu_id}" class="porsiyon-sec" ${pasif ? "disabled" : ""}>
+               <option value="tam">Tam porsiyon</option>
+               <option value="yarim">Yarım (%60)</option>
+             </select>`
+          : "";
         html += `
           <div class="menu-satir">
             <div class="bilgi">
@@ -65,6 +72,7 @@
             </div>
             <div class="sag">
               ${rozet}
+              ${porsiyonSec}
               <button class="dugme" ${pasif ? "disabled" : ""}
                 onclick="rezerve(${m.menu_id})">Rezerve et</button>
             </div>
@@ -74,12 +82,15 @@
     }
 
     async function rezerve(menuId) {
+      const sec = document.getElementById("porsiyon-" + menuId);
+      const porsiyon = sec ? sec.value : "tam";
       try {
-        const s = await istek("/rezervasyon", { method: "POST", govde: { menu_id: menuId } });
-        bildirim("mesaj", `${s.mesaj} Ücret ${paraYaz(s.ucret)} düşüldü, güncel bakiye ${paraYaz(s.bakiye)}.`, "basari");
+        const s = await istek("/rezervasyon", { method: "POST", govde: { menu_id: menuId, porsiyon } });
+        const not = porsiyon === "yarim" ? " (yarım porsiyon)" : "";
+        bildirim("mesaj", `${s.mesaj}${not} Ücret ${paraYaz(s.ucret)} düşüldü, güncel bakiye ${paraYaz(s.bakiye)}.`, "basari");
         await yukle();
       } catch (err) {
-        bildirim("mesaj", err.message);   // "Bakiye yetersiz." vb. yordam mesajı
+        bildirim("mesaj", err.message);   // "Bakiye yetersiz." / "Kahvaltıda yarım porsiyon seçilemez." vb.
       }
     }
 

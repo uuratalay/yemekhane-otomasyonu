@@ -75,6 +75,7 @@ function menuCiz(aktif) {
     ["rezervasyonlarim.html", "Rezervasyonlarım"],
     ["bakiye.html", "Bakiye"],
     ["degerlendirme.html", "Değerlendirme"],
+    ["profil.html", "Profil"],
   ];
   if (k.rol === "yonetici") linkler.push(["yonetim.html", "Yönetim"]);
 

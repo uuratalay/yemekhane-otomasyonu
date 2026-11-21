@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 from .core.hatalar import UygulamaHatasi
 from .api import (
     kimlik_api, katalog_api, menu_api, rezervasyon_api,
-    bakiye_api, degerlendirme_api, yonetim_api,
+    bakiye_api, degerlendirme_api, yonetim_api, profil_api,
 )
 
 app = FastAPI(title="Yemekhane Otomasyonu API", docs_url="/api/docs", openapi_url="/api/openapi.json")
@@ -22,7 +22,7 @@ async def uygulama_hatasi_isle(request: Request, exc: UygulamaHatasi):
 
 
 for modul in (kimlik_api, katalog_api, menu_api, rezervasyon_api,
-              bakiye_api, degerlendirme_api, yonetim_api):
+              bakiye_api, degerlendirme_api, yonetim_api, profil_api):
     app.include_router(modul.router)
 
 

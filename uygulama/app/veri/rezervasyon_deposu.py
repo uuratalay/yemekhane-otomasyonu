@@ -1,15 +1,16 @@
 """
 RezervasyonDeposu — rezervasyon işlemleri.
 Para hareketi yapan yap/iptal KAYNAK'ta stored procedure ile; listeleme REPLİKA'dan.
+yap: Aşama 4 ile porsiyon (tam/yarim) parametresi eklendi.
 """
 from .temel_depo import TemelDepo
 
 
 class RezervasyonDeposu(TemelDepo):
 
-    def yap(self, kullanici_id: int, menu_id: int):
-        # sp_rezervasyon_yap -> {rezervasyon_id, ucret, bakiye}
-        return self.yordam_cagir("sp_rezervasyon_yap", (kullanici_id, menu_id))
+    def yap(self, kullanici_id: int, menu_id: int, porsiyon: str = "tam"):
+        # sp_rezervasyon_yap(kullanici, menu, porsiyon) -> {rezervasyon_id, ucret, bakiye}
+        return self.yordam_cagir("sp_rezervasyon_yap", (kullanici_id, menu_id, porsiyon))
 
     def iptal(self, kullanici_id: int, rezervasyon_id: int):
         # sp_rezervasyon_iptal -> {rezervasyon_id, iade, bakiye}
@@ -18,7 +19,7 @@ class RezervasyonDeposu(TemelDepo):
     def listele(self, kullanici_id: int):
         return self.oku_liste(
             """
-            SELECT r.id AS rezervasyon_id, r.durum, r.ucret, r.olusturma,
+            SELECT r.id AS rezervasyon_id, r.durum, r.porsiyon, r.ucret, r.olusturma,
                    m.id AS menu_id, m.tarih, o.ad AS ogun, yh.ad AS yemekhane,
                    TIMESTAMP(m.tarih, o.son_saat) AS rezervasyon_son,
                    (r.durum = 'aktif'

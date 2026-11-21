@@ -58,13 +58,18 @@
       const m = await istek(`/menu/gunluk?yemekhane_id=${yemekhaneSec.value}&tarih=${tarihGir.value}&ogun_id=${ogunSec.value}`);
       if (!m) { sonuc.innerHTML = '<div class="kart"><p>Bu seçim için menü bulunamadı.</p></div>'; return; }
 
-      const satirlar = m.yemekler.map(y => `
-        <tr>
+      const satirlar = m.yemekler.map(y => {
+        const uyari = (y.uyari && y.uyari.length)
+          ? `<br><span class="rozet az">⚠ sizin alerjeniniz: ${y.uyari.join(", ")}</span>`
+          : "";
+        return `
+        <tr${y.uyari && y.uyari.length ? ' class="uyari-satir"' : ""}>
           <td>${y.kategori}</td>
-          <td>${y.ad} ${y.vejetaryen ? '<span class="rozet">vejetaryen</span>' : ""}</td>
+          <td>${y.ad} ${y.vejetaryen ? '<span class="rozet">vejetaryen</span>' : ""}${uyari}</td>
           <td>${y.kalori} kcal</td>
           <td>${y.alerjenler || "—"}</td>
-        </tr>`).join("");
+        </tr>`;
+      }).join("");
 
       sonuc.innerHTML = `
         <div class="kart">
@@ -80,6 +85,7 @@
               <thead><tr><th>Kategori</th><th>Yemek</th><th>Kalori</th><th>Alerjenler</th></tr></thead>
               <tbody>${satirlar}</tbody>
             </table>
+            <p class="ipucu" style="margin-top:.5rem">⚠ işareti, Profil sayfanızda seçtiğiniz alerjenleri içeren yemekleri gösterir.</p>
           </div>
         </div>`;
     }
